@@ -41,6 +41,24 @@ def addUser( mail, name, password):
     print("DATA STORED")
     return True
 
+def get_user_id(_mail, _password):
+    _password = _password.encode()
+    _password = hashlib.sha256(_password).hexdigest()
+
+    conn = get_db()
+    cur = conn.execute('''SELECT id FROM userdata
+                        WHERE email = ? AND password = ?
+                       ''',(_mail, _password))
+    row = cur.fetchone()
+    if row is not None:
+        user_id = row[0] 
+    else:
+        user_id = None
+
+    print('printing CUR')
+    print(user_id)
+    return user_id
+
 
 def loginCheck(mail, password):
     password = password.encode()
