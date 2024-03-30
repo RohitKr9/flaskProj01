@@ -8,7 +8,7 @@ app1 = Flask(__name__)
 app1.secret_key = 'sessionKey'
 app1.permanent_session_lifetime = timedelta(days=1)
 
-from database import addUser, get_user_id, loginCheck
+from database import addUser, get_user_id, loginCheck, mailCheck
 from notes_db import get_note, add_note
     
 
@@ -45,12 +45,28 @@ def signup():
         password2 = request.form['confirm-password']
 
         if password != password2: return render_template("signup.html", msg='Password is not matching')
-        print(f' {name} {email} {password}')
+
+        #will check the emailid is there in db or not
+        if mailCheck(email): return render_template("signup.html", msg='email Id already exists')
+
+
         password = password.encode()
         if addUser( email, name, password):
+            #yha pe register hone k bad session nahi create ho rha tha 
+            #so we copied code from login
+            session.permanent = True
+            session['userId'] = get_user_id(email, password2) 
+            print(session['userId'])
             return redirect(url_for('messagePage'))
+        
+            # if loginCheck(email, password2):
+            #     session.permanent = True
+            #     session['userId'] = get_user_id(email, password2) 
+            #     print(session['userId'])
+            #     return redirect(url_for('messagePage'))
+            # return 'something went wrong'
         else :
-            return render_template("signup.html")
+            return render_template("signup.html", msg='Something went wrong')
     return render_template("signup.html")
 
 @app1.route('/yournote',methods = ['GET', 'POST'])
@@ -60,7 +76,10 @@ def messagePage():
         add_note(request.form['content'])
         print(request.form['content'])
 
-    prev_notes = get_note()
+    date_time = datetime.date.today()
+    # Convert datetime object to string
+    datetime_str = date_time.strftime('%Y-%m-%d')
+    prev_notes = get_note(datetime_str)
     print("NOTES")
     print(prev_notes)
     return render_template('msg.html', _date = datetime.date.today(), _note = prev_notes)
@@ -69,6 +88,12 @@ def messagePage():
 def logout():
     session.pop('userId',None)
     return redirect(url_for('login'))
+
+@app1.route('/old_notes', methods = ['GET', 'POST'])
+def old_notes():
+    if request.method == 'POST':
+      _date = request.form['note_date']
+      return render_template('old_notes.html', _date = _date, _notes = get_note(_date))
 
 
 # if __name__=="__main__":

@@ -19,7 +19,7 @@ def addUser( mail, name, password):
     conn = get_db()
     conn.execute('''
     CREATE TABLE IF NOT EXISTS userdata (
-                       id INTEGER AUTO_INCREMENT PRIMARY KEY ,
+                       id INTEGER PRIMARY KEY AUTOINCREMENT,
                        email VARCHAR(255) NOT NULL,
                        username VARCHAR(255) NOT NULL,
                        password VARCHAR(255) NOT NULL
@@ -29,7 +29,7 @@ def addUser( mail, name, password):
     
     cur = conn.execute('SELECT email from userdata')
     for _mail in cur:
-        if(_mail == mail): return False
+        if(_mail[0] == mail): return False
     
     password = hashlib.sha256(password).hexdigest()
     conn.execute('''
@@ -63,8 +63,35 @@ def get_user_id(_mail, _password):
 def loginCheck(mail, password):
     password = password.encode()
     password = hashlib.sha256(password).hexdigest()
+
     conn = get_db()
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS userdata (
+                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+                       email VARCHAR(255) NOT NULL,
+                       username VARCHAR(255) NOT NULL,
+                       password VARCHAR(255) NOT NULL
+    )
+                       ''')
+    conn.commit()
     cur = conn.execute('SELECT email, password from userdata')
     for row in cur:
-        if row[0]==mail and row[1]==password : return True
+        if row is not None:
+            if row[0]==mail and row[1]==password : return True
+    return False
+
+def mailCheck(mail):
+    conn = get_db()
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS userdata (
+                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+                       email VARCHAR(255) NOT NULL,
+                       username VARCHAR(255) NOT NULL,
+                       password VARCHAR(255) NOT NULL
+    )
+                       ''')
+    conn.commit()
+    cur = conn.execute('SELECT email from userdata')
+    for row in cur:
+        if row[0]==mail : return True
     return False
